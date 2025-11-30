@@ -1,24 +1,114 @@
+############################################
+# PYTHON / BACKEND
+############################################
+
+# Bytecode files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+*env/
+
+# Build/packaging
+build/
+dist/
+*.egg-info/
+
+# Python cache
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Model training artifacts (optional)
+*.h5
+*.joblib
+*.pth
+
+# Ignore all pickle files except final production models
+*.pkl
+!backend/app/model/lords_model.pkl
+!backend/app/model/label_encoder.pkl
+
+
+############################################
+# FRONTEND / NODE / VITE
+############################################
+
+node_modules/
+dist/
+build/
+.vite/
+
 # Logs
-logs
-*.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+pnpm-debug.log+
 
-node_modules
-dist
-dist-ssr
-*.local
+# Local env files
+.env
+.env.*
+frontend/.env
+frontend/.env.*
 
-# Editor directories and files
-.vscode/*
+# Vite cache
+vite.config.ts.timestamp-*
+vite.config.js.timestamp-*
+
+
+############################################
+# DATAFILES (optional, but recommended)
+############################################
+
+data/*.csv
+data/*.txt
+
+# If you want to keep certain clean dataset files:
+# !data/lords-clean.csv
+
+
+############################################
+# DOCKER
+############################################
+
+# Docker artifacts
+docker-volume/
+*.pid
+*.tar
+
+# Ignore Docker build context
+**/.dockerignore
+
+
+############################################
+# EDITORS / OS JUNK
+############################################
+
+# VSCode
+.vscode/
 !.vscode/extensions.json
-.idea
+
+# JetBrains
+.idea/
+
+# macOS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Others
+*.swp
+*.swo
+
+
+############################################
+# TRAINING SCRIPTS (optional)
+############################################
+
+# If you don't want src/ training files in repo:
+# src/*.py

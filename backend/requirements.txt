@@ -1,7 +1,5 @@
-pandas
+fastapi
+uvicorn[standard]
+joblib
 numpy
 scikit-learn
-matplotlib
-fastapi
-uvicorn
-joblib
