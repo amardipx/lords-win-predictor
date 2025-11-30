@@ -1,6 +1,8 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from .predict import predict_probabilities
+
 
 app = FastAPI(
     title="Lords Win Probability API",
@@ -9,16 +11,27 @@ app = FastAPI(
 )
 
 # ----------------------------
+# CORS MIDDLEWARE — REQUIRED FOR FRONTEND
+# ----------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],          # Allow all frontend origins
+    allow_credentials=True,
+    allow_methods=["*"],          # Allow GET, POST, OPTIONS, etc.
+    allow_headers=["*"],          # Allow all headers
+)
+
+
+# ----------------------------
 # Request body schema
 # ----------------------------
-
 class ScoreRequest(BaseModel):
     score: int = Field(..., example=320, ge=0, description="First innings score")
+
 
 # ----------------------------
 # Response schema
 # ----------------------------
-
 class ProbabilityResponse(BaseModel):
     win_probability: float
     draw_probability: float
