@@ -1,9 +1,20 @@
 import joblib
 import numpy as np
+import os
 
+# ------------------------------
 # Load model + label encoder
-model = joblib.load("model/lords_model.pkl")
-label_encoder = joblib.load("model/label_encoder.pkl")
+# ------------------------------
+
+# Path to: backend/app/model/
+MODEL_DIR = os.path.join(os.path.dirname(__file__), "model")
+
+model_path = os.path.join(MODEL_DIR, "lords_model.pkl")
+encoder_path = os.path.join(MODEL_DIR, "label_encoder.pkl")
+
+model = joblib.load(model_path)
+label_encoder = joblib.load(encoder_path)
+
 
 def predict_probabilities(score: int):
     """
@@ -17,15 +28,14 @@ def predict_probabilities(score: int):
 
     percentages = probs * 100
 
-    # Raw mapping from class → probability
     cls_to_pct = {cls: pct for cls, pct in zip(classes, percentages)}
 
-    # Fixed display order
     return {
         "win probability":  float(cls_to_pct["won"]),
         "draw probability": float(cls_to_pct["draw"]),
         "loss probability": float(cls_to_pct["lost"]),
     }
+
 
 if __name__ == "__main__":
     example_score = 320
