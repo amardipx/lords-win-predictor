@@ -1,41 +1,36 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from .predict import predict_probabilities
+from .predict import predict_probabilities, predict_second_innings
 
 
 app = FastAPI(
     title="Lords Win Probability API",
-    description="Predict win/draw/loss probabilities based on 1st innings score at Lord's.",
-    version="1.0.0"
+    description="Predict win/draw/loss probabilities for Test matches at Lord's.",
+    version="1.1.0"
 )
 
 # ----------------------------
-# CORS MIDDLEWARE — REQUIRED FOR FRONTEND
+# CORS
 # ----------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # Allow all frontend origins
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],          # Allow GET, POST, OPTIONS, etc.
-    allow_headers=["*"],          # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-
 # ----------------------------
-# Request body schema
+# Schemas
 # ----------------------------
 class ScoreRequest(BaseModel):
-    score: int = Field(..., example=320, ge=0, description="First innings score")
+    score: int = Field(..., ge=0, description="First innings score")
 
 
-# ----------------------------
-# Response schema
-# ----------------------------
-class ProbabilityResponse(BaseModel):
-    win_probability: float
-    draw_probability: float
-    loss_probability: float
+class SecondInningsRequest(BaseModel):
+    score_1: int = Field(..., ge=0, description="First innings score")
+    score_2: int = Field(..., ge=0, description="Second innings score")
 
 
 # ----------------------------
@@ -47,15 +42,16 @@ def root():
 
 
 # ----------------------------
-# Prediction endpoint
+# FIRST INNINGS ENDPOINT
 # ----------------------------
-@app.post("/predict", response_model=ProbabilityResponse)
+@app.post("/predict")
 def predict(req: ScoreRequest):
+    return predict_probabilities(req.score)
 
-    probabilities = predict_probabilities(req.score)
 
-    return {
-        "win_probability":  probabilities["win probability"],
-        "draw_probability": probabilities["draw probability"],
-        "loss_probability": probabilities["loss probability"]
-    }
+# ----------------------------
+# SECOND INNINGS ENDPOINT
+# ----------------------------
+@app.post("/predict/second")
+def predict_second(req: SecondInningsRequest):
+    return predict_second_innings(req.score_1, req.score_2)

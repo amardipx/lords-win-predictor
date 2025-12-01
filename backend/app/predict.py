@@ -3,44 +3,75 @@ import numpy as np
 import os
 
 # ------------------------------
-# Load model + label encoder
+# Model directory
 # ------------------------------
-
-# Path to: backend/app/model/
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "model")
 
-model_path = os.path.join(MODEL_DIR, "lords_model.pkl")
-encoder_path = os.path.join(MODEL_DIR, "label_encoder.pkl")
+# ------------------------------
+# FIRST INNINGS MODEL
+# ------------------------------
+first_model = joblib.load(os.path.join(MODEL_DIR, "lords_model.pkl"))
+first_encoder = joblib.load(os.path.join(MODEL_DIR, "label_encoder.pkl"))
 
-model = joblib.load(model_path)
-label_encoder = joblib.load(encoder_path)
+# ------------------------------
+# SECOND INNINGS MODEL
+# ------------------------------
+second_model = joblib.load(os.path.join(MODEL_DIR, "second_innings_model.pkl"))
+second_encoder = joblib.load(os.path.join(MODEL_DIR, "second_innings_label_encoder.pkl"))
 
 
+# ============================================================
+# FIRST INNINGS PREDICTION
+# ============================================================
 def predict_probabilities(score: int):
-    """
-    Return probabilities in fixed order:
-    win → draw → loss
-    (values as percentages 1–100)
-    """
-    score_array = np.array([[score]])
-    probs = model.predict_proba(score_array)[0]
-    classes = label_encoder.classes_
+    X = np.array([[score]])
+    probs = first_model.predict_proba(X)[0] * 100
+    labels = first_encoder.classes_
 
-    percentages = probs * 100
+    cls_to_pct = {cls: pct for cls, pct in zip(labels, probs)}
 
-    cls_to_pct = {cls: pct for cls, pct in zip(classes, percentages)}
+    team_a = {
+        "win":  float(cls_to_pct["won"]),
+        "draw": float(cls_to_pct["draw"]),
+        "loss": float(cls_to_pct["lost"])
+    }
+
+    team_b = {
+        "win":  float(cls_to_pct["lost"]),
+        "draw": float(cls_to_pct["draw"]),
+        "loss": float(cls_to_pct["won"])
+    }
 
     return {
-        "win probability":  float(cls_to_pct["won"]),
-        "draw probability": float(cls_to_pct["draw"]),
-        "loss probability": float(cls_to_pct["lost"]),
+        "team_a": team_a,
+        "team_b": team_b
     }
 
 
-if __name__ == "__main__":
-    example_score = 320
-    result = predict_probabilities(example_score)
+# ============================================================
+# SECOND INNINGS PREDICTION
+# ============================================================
+def predict_second_innings(score_1: int, score_2: int):
+    diff = score_1 - score_2
+    X = np.array([[score_1, score_2, diff]])
 
-    print(f"Score: {example_score}")
-    for outcome, p in result.items():
-        print(f"{outcome}: {p:.2f}%")
+    probs = second_model.predict_proba(X)[0] * 100
+    labels = second_encoder.inverse_transform([0, 1, 2])
+    result = dict(zip(labels, probs))
+
+    team_a = {
+        "win":  float(result["won"]),
+        "draw": float(result["draw"]),
+        "loss": float(result["lost"])
+    }
+
+    team_b = {
+        "win":  float(result["lost"]),
+        "draw": float(result["draw"]),
+        "loss": float(result["won"])
+    }
+
+    return {
+        "team_a": team_a,
+        "team_b": team_b
+    }
