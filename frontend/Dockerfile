@@ -1,15 +1,25 @@
-FROM node:20-alpine
+FROM node:20-alpine AS build
 
 WORKDIR /app
-
-# Install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy rest of the frontend
 COPY . .
+RUN npm run build
 
-EXPOSE 5173
+# ---
 
-# Run Vite dev server and expose outside
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+FROM node:20-alpine AS prod
+
+WORKDIR /app
+
+# Install a tiny static server
+RUN npm install -g serve
+
+# Copy build output from the builder stage
+COPY --from=build /app/dist ./dist
+
+EXPOSE 8080
+
+# Serve the built frontend
+CMD ["serve", "-s", "dist", "-l", "8080"]
