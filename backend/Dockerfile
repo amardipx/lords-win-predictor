@@ -15,4 +15,4 @@ EXPOSE 8000
 
 # Run the FastAPI app
 # NOTE: inside container, our package is just "app", not "backend.app"
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
