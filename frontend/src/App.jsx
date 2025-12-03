@@ -1,12 +1,17 @@
 import { useState } from "react";
 import lordsImg from "./assets/lords.jpg";
-import { predictFirstInnings, predictSecondInnings } from "./api/predict";
+import { 
+  predictFirstInnings, 
+  predictSecondInnings,
+  predictThirdInnings
+} from "./api/predict";
 
 export default function App() {
   const [inningsType, setInningsType] = useState("first");
 
   const [score1, setScore1] = useState("");
   const [score2, setScore2] = useState("");
+  const [score3, setScore3] = useState("");
 
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -21,8 +26,12 @@ export default function App() {
 
       if (inningsType === "first") {
         data = await predictFirstInnings(score1);
-      } else {
+      } 
+      else if (inningsType === "second") {
         data = await predictSecondInnings(score1, score2);
+      } 
+      else {
+        data = await predictThirdInnings(score1, score2, score3);
       }
 
       setResult(data);
@@ -54,9 +63,10 @@ export default function App() {
 
         {/* INNINGS SWITCH */}
         <div className="flex justify-center space-x-6 mb-4">
+          
           <label>
             <input 
-              type="radio" 
+              type="radio"
               value="first"
               checked={inningsType === "first"}
               onChange={() => setInningsType("first")}
@@ -66,13 +76,24 @@ export default function App() {
 
           <label>
             <input 
-              type="radio" 
+              type="radio"
               value="second"
               checked={inningsType === "second"}
               onChange={() => setInningsType("second")}
             />
             <span className="ml-2">2nd Innings</span>
           </label>
+
+          <label>
+            <input 
+              type="radio"
+              value="third"
+              checked={inningsType === "third"}
+              onChange={() => setInningsType("third")}
+            />
+            <span className="ml-2">3rd Innings</span>
+          </label>
+
         </div>
 
         {/* FIRST INNINGS INPUT */}
@@ -87,8 +108,8 @@ export default function App() {
           className="w-full p-2 rounded bg-zinc-800 outline-none"
         />
 
-        {/* SECOND INNINGS INPUT IF NEEDED */}
-        {inningsType === "second" && (
+        {/* SECOND INPUT */}
+        {inningsType !== "first" && (
           <>
             <label className="block text-sm text-zinc-400 mb-1">
               Second Innings Score
@@ -97,7 +118,23 @@ export default function App() {
               type="number"
               value={score2}
               onChange={(e) => setScore2(e.target.value)}
-              placeholder="e.g., 280"
+              placeholder="e.g., 250"
+              className="w-full p-2 rounded bg-zinc-800 outline-none"
+            />
+          </>
+        )}
+
+        {/* THIRD INPUT */}
+        {inningsType === "third" && (
+          <>
+            <label className="block text-sm text-zinc-400 mb-1">
+              Third Innings Score
+            </label>
+            <input
+              type="number"
+              value={score3}
+              onChange={(e) => setScore3(e.target.value)}
+              placeholder="e.g., 180"
               className="w-full p-2 rounded bg-zinc-800 outline-none"
             />
           </>
@@ -112,25 +149,51 @@ export default function App() {
         </button>
       </form>
 
+
+
       {/* RESULT */}
       {result && (
         <div className="mt-10 bg-zinc-900 p-8 rounded-2xl w-full max-w-md text-center border border-zinc-800 space-y-2">
 
-          <h2 className="text-2xl font-semibold mb-3">Probabilities</h2>
+          {/* If innings defeat */}
+          {result.innings_defeat && (
+            <>
+              <h2 className="text-2xl font-bold text-red-400 mb-4">
+                Innings Defeat
+              </h2>
+              <p>{result.message}</p>
+            </>
+          )}
 
-          {/* TEAM A */}
-          <h3 className="text-lg font-bold text-green-400 mb-2">Team A (Batting First)</h3>
-          
-          <p>Win:  <span className="font-bold text-green-400">{result.team_a.win.toFixed(2)}%</span></p>
-          <p>Draw: <span className="font-bold text-blue-400">{result.team_a.draw.toFixed(2)}%</span></p>
-          <p>Loss: <span className="font-bold text-red-400">{result.team_a.loss.toFixed(2)}%</span></p>
+          {/* If normal probabilities */}
+          {!result.innings_defeat && (
+            <>
+              {/* Show target if 3rd innings */}
+              {inningsType === "third" && (
+                <p className="mb-3 text-zinc-300">
+                  Target for 4th innings: <span className="font-bold">{result.target}</span>
+                </p>
+              )}
 
-          {/* TEAM B */}
-          <h3 className="text-lg font-bold text-red-400 mt-4 mb-2">Team B (Opponent)</h3>
-          
-          <p>Win:  <span className="font-bold text-green-400">{result.team_b.win.toFixed(2)}%</span></p>
-          <p>Draw: <span className="font-bold text-blue-400">{result.team_b.draw.toFixed(2)}%</span></p>
-          <p>Loss: <span className="font-bold text-red-400">{result.team_b.loss.toFixed(2)}%</span></p>
+              <h2 className="text-2xl font-semibold mb-3">Probabilities</h2>
+
+              {/* TEAM A */}
+              <h3 className="text-lg font-bold text-green-400 mb-2">
+                Team A (Batting First)
+              </h3>
+
+              <p>Win:  <span className="font-bold text-green-400">{result.team_a.win.toFixed(2)}%</span></p>
+              <p>Draw: <span className="font-bold text-blue-400">{result.team_a.draw.toFixed(2)}%</span></p>
+              <p>Loss: <span className="font-bold text-red-400">{result.team_a.loss.toFixed(2)}%</span></p>
+
+              {/* TEAM B */}
+              <h3 className="text-lg font-bold text-red-400 mt-4 mb-2">Team B (Opponent)</h3>
+
+              <p>Win:  <span className="font-bold text-green-400">{result.team_b.win.toFixed(2)}%</span></p>
+              <p>Draw: <span className="font-bold text-blue-400">{result.team_b.draw.toFixed(2)}%</span></p>
+              <p>Loss: <span className="font-bold text-red-400">{result.team_b.loss.toFixed(2)}%</span></p>
+            </>
+          )}
 
         </div>
       )}
