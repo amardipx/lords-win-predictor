@@ -1,39 +1,75 @@
 import re
 import pandas as pd
 
-# Load raw text
-with open("data/lords-raw.txt", "r", encoding="utf-8") as f:
-    lines = [line.strip() for line in f.readlines() if line.strip()]
+INPUT = "data/lords-raw.txt"
+OUTPUT = "data/lords-clean.csv"
 
-# Skip the header (first line contains column names, not data)
-lines = lines[1:]
+def clean_score(raw_score: str) -> str:
+    """
+    Extract the numeric runs from a score string.
+    Examples:
+        191/8  -> 191
+        529/5d -> 529
+        14/2   -> 14
+    """
+    match = re.match(r"(\d+)", raw_score)
+    return match.group(1) if match else raw_score.strip()
 
-# Regex pattern that handles multi-word teams & opposition
 pattern = re.compile(
-    r"^(?P<Team>[A-Za-z ]+)\s+"
-    r"(?P<Score>[0-9/]+d?)\s+"
-    r"(?P<Overs>[0-9.]+)\s+"
-    r"(?P<Target>[0-9]*)\s*"
-    r"(?P<RPO>[0-9.]+)\s+"
-    r"(?P<Inns>[1-4])\s+"
-    r"(?P<Result>won|lost|draw)\s+v\s+"
-    r"(?P<Opposition>[A-Za-z ]+)\s+"
-    r"(?P<StartDate>\d{1,2}\s+[A-Za-z]{3}\s+\d{4})$"
+    r"""^
+    (?P<Team>[A-Za-z ]+?)\s+
+    (?P<Score>[0-9/]+d?)\s+
+    (?P<Overs>[0-9.]+)\s+
+    (?P<Target>[0-9]*)\s*
+    (?P<RPO>[0-9.]+)\s+
+    (?P<Inns>[1-4])\s+
+    (?P<Result>won|lost|draw)\s+
+    (?:v\s+)?(?P<Opposition>[A-Za-z ]+?)\s+
+    (?P<StartDate>\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})
+    $""",
+    re.VERBOSE,
 )
 
 rows = []
+failed = []
+
+with open(INPUT, "r", encoding="utf-8") as fh:
+    lines = [ln.strip() for ln in fh if ln.strip()]
+
+# skip header
+if lines and ("Team" in lines[0] and "Score" in lines[0]):
+    lines = lines[1:]
 
 for line in lines:
-    match = pattern.match(line)
-    if match:
-        rows.append(match.groupdict())
-    else:
-        print("❌ Could not parse line:", line)
+    m = pattern.match(line)
+    if not m:
+        failed.append(line)
+        continue
 
-df = pd.DataFrame(rows)
+    d = m.groupdict()
 
-df.to_csv("data/lords-clean.csv", index=False)
+    raw_score = d["Score"].strip()
+    score = clean_score(raw_score)
 
-print("✅ CSV created successfully!")
-print("Total rows:", len(df))
-print(df.head())
+    target = d["Target"].strip()
+    if d["Inns"] != "4" or target == "":
+        target = ""
+
+    rows.append({
+        "Team": d["Team"].strip(),
+        "Score": score,
+        "Target": target,
+        "Inns": d["Inns"].strip(),
+        "Result": d["Result"].strip(),
+        "Opposition": d["Opposition"].strip(),
+        "Start Date": d["StartDate"].strip(),
+    })
+
+df = pd.DataFrame(rows, columns=["Team", "Score", "Target", "Inns", "Result", "Opposition", "Start Date"])
+df.to_csv(OUTPUT, index=False)
+
+print(f"✅ Written {len(df)} rows to {OUTPUT}")
+if failed:
+    print(f"⚠️ {len(failed)} lines could not be parsed:")
+    for ln in failed:
+        print("  -", ln)

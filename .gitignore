@@ -34,6 +34,8 @@ dist/
 !backend/app/model/label_encoder.pkl
 !backend/app/model/second_innings_model.pkl
 !backend/app/model/second_innings_label_encoder.pkl
+!backend/app/model/third_innings_model.pkl
+!backend/app/model/third_innings_label_encoder.pkl
 
 
 ############################################
