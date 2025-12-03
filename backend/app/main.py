@@ -1,13 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from .predict import predict_probabilities, predict_second_innings
-
+from .predict import (
+    predict_probabilities,
+    predict_second_innings,
+    predict_third_innings
+)
 
 app = FastAPI(
     title="Lords Win Probability API",
     description="Predict win/draw/loss probabilities for Test matches at Lord's.",
-    version="1.1.0"
+    version="1.2.0"
 )
 
 # ----------------------------
@@ -33,6 +36,12 @@ class SecondInningsRequest(BaseModel):
     score_2: int = Field(..., ge=0, description="Second innings score")
 
 
+class ThirdInningsRequest(BaseModel):
+    score_1: int = Field(..., ge=0, description="First innings score")
+    score_2: int = Field(..., ge=0, description="Second innings score")
+    score_3: int = Field(..., ge=0, description="Third innings score")
+
+
 # ----------------------------
 # Root endpoint
 # ----------------------------
@@ -55,3 +64,11 @@ def predict(req: ScoreRequest):
 @app.post("/predict/second")
 def predict_second(req: SecondInningsRequest):
     return predict_second_innings(req.score_1, req.score_2)
+
+
+# ----------------------------
+# THIRD INNINGS ENDPOINT
+# ----------------------------
+@app.post("/predict/third")
+def predict_third(req: ThirdInningsRequest):
+    return predict_third_innings(req.score_1, req.score_2, req.score_3)
