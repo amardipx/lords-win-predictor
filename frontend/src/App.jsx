@@ -43,7 +43,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center">
+    <div className="min-h-screen bg-zinc-950 text-white flex flex-col">
 
       <img 
         src={lordsImg} 
@@ -51,14 +51,14 @@ export default function App() {
         className="w-full max-h-72 object-cover shadow-lg"
       />
 
-      <h1 className="text-4xl font-bold mt-8 mb-6 tracking-wide">
+      <h1 className="text-4xl font-bold mt-8 mb-6 tracking-wide text-center">
         Lord’s Win Probability
       </h1>
 
       {/* FORM */}
       <form 
         onSubmit={handleSubmit}
-        className="bg-zinc-900 p-6 rounded-xl w-full max-w-md shadow-xl space-y-4"
+        className="bg-zinc-900 p-6 rounded-xl w-full shadow-xl space-y-4"
       >
 
         {/* INNINGS SWITCH */}
